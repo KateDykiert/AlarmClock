@@ -10,7 +10,7 @@
  * K1 -> B1
  * K2 -> B4
  *
- * Wyœwietlacz
+ * Wyświetlacz
  * a -> E4
  * b -> E5
  * c -> E6
@@ -24,12 +24,7 @@
  * IN -> A4
  * ADC1 -> A1
  *
- *
- *
- *
- *
  * */
-
 
 int a = 0;
 int b = 0;
@@ -42,7 +37,8 @@ int counter_seg = 0;
 int iter;
 int on_off = 1;
 int set = 0;
-int mig = 0;
+int mig = 1;
+int licznikdlagodziny=0;
 
 volatile int segments[]={GPIO_Pin_4,GPIO_Pin_5,GPIO_Pin_6,GPIO_Pin_7,GPIO_Pin_8,GPIO_Pin_9,GPIO_Pin_10,GPIO_Pin_11};
 volatile int i=0;
@@ -74,9 +70,9 @@ uint16_t numbersSet [10] = {
 		/* -9- */	GPIO_Pin_8 | GPIO_Pin_11
 };
 
-//playing the alarm
 void TIM4_IRQHandler(void)
 {
+	// dzwonek
 	if(TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET)
 	{
 		if(iter==123200) iter=0;
@@ -88,232 +84,690 @@ void TIM4_IRQHandler(void)
 	}
 }
 
-//time display
 void TIM2_IRQHandler(void)
 {
+	//JEŚLI USTAWIAMY BUDZIK
 	if(mode == 1){
 		if(TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
 		{
-			if(segment == 0 && counter_seg == 0)
-			{
-				GPIO_SetBits(GPIOD, piny[0]);
-				GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+			if(counter_seg==0){ //JEŚLI MA MIGAĆ PIERWSZY(0) SEGMENT
+				if(mig==1){ //zapalony (0,1,2,3)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
 
-				GPIO_SetBits(GPIOE, numbersSet[a1]);
-				GPIO_ResetBits(GPIOE, numbersReset[a1]);
-				GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-			}
-			if(segment == 0 && counter_seg != 0)
-			{
-				GPIO_SetBits(GPIOD, piny[0]);
-				GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+						GPIO_SetBits(GPIOE, numbersSet[a1]);
+						GPIO_ResetBits(GPIOE, numbersReset[a1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
 
-				GPIO_SetBits(GPIOE, numbersSet[a1]);
-				GPIO_ResetBits(GPIOE, numbersReset[a1]);
-			}
-			if(segment == 1 && counter_seg == 1)
-			{
-				GPIO_SetBits(GPIOD, piny[1]);
-				GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+						GPIO_SetBits(GPIOE, numbersSet[b1]);
+						GPIO_ResetBits(GPIOE, numbersReset[b1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
 
-				GPIO_SetBits(GPIOE, numbersSet[b1]);
-				GPIO_ResetBits(GPIOE, numbersReset[b1]);
-				GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-			}
-			if(segment == 1 && counter_seg != 1)
-			{
-				GPIO_SetBits(GPIOD, piny[1]);
-				GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+						GPIO_SetBits(GPIOE, numbersSet[c1]);
+						GPIO_ResetBits(GPIOE, numbersReset[c1]);
+					}
+					if(segment == 3)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
 
-				GPIO_SetBits(GPIOE, numbersSet[b1]);
-				GPIO_ResetBits(GPIOE, numbersReset[b1]);
-			}
-			if(segment == 2 && counter_seg == 2)
-			{
-				GPIO_SetBits(GPIOD, piny[2]);
-				GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+						GPIO_SetBits(GPIOE, numbersSet[d1]);
+						GPIO_ResetBits(GPIOE, numbersReset[d1]);
+					}
+					segment++;
+					if(segment == 4) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
+				else if(mig==0){ //zgaszony (1,2,3)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
 
-				GPIO_SetBits(GPIOE, numbersSet[c1]);
-				GPIO_ResetBits(GPIOE, numbersReset[c1]);
-				GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-			}
-			if(segment == 2 && counter_seg != 2)
-			{
-				GPIO_SetBits(GPIOD, piny[2]);
-				GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+						GPIO_SetBits(GPIOE, numbersSet[b1]);
+						GPIO_ResetBits(GPIOE, numbersReset[b1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
 
-				GPIO_SetBits(GPIOE, numbersSet[c1]);
-				GPIO_ResetBits(GPIOE, numbersReset[c1]);
-			}
-			if(segment == 3 && counter_seg == 3)
-			{
-				GPIO_SetBits(GPIOD, piny[3]);
-				GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+						GPIO_SetBits(GPIOE, numbersSet[c1]);
+						GPIO_ResetBits(GPIOE, numbersReset[c1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
 
-				GPIO_SetBits(GPIOE, numbersSet[d1]);
-				GPIO_ResetBits(GPIOE, numbersReset[d1]);
-				GPIO_ResetBits(GPIOE, GPIO_Pin_11);
+						GPIO_SetBits(GPIOE, numbersSet[d1]);
+						GPIO_ResetBits(GPIOE, numbersReset[d1]);
+					}
+					segment++;
+					if(segment == 3) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
 			}
-			if(segment == 3 && counter_seg != 3)
-			{
-				GPIO_SetBits(GPIOD, piny[3]);
-				GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+			else if(counter_seg==1){ //JEŚLI MA MIGAĆ DRUGI(1) SEGMENT
+				if(mig==1){ //zapalony (0,1,2,3)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
 
-				GPIO_SetBits(GPIOE, numbersSet[d1]);
-				GPIO_ResetBits(GPIOE, numbersReset[d1]);
+						GPIO_SetBits(GPIOE, numbersSet[a1]);
+						GPIO_ResetBits(GPIOE, numbersReset[a1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[b1]);
+						GPIO_ResetBits(GPIOE, numbersReset[b1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[c1]);
+						GPIO_ResetBits(GPIOE, numbersReset[c1]);
+					}
+					if(segment == 3)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+						GPIO_SetBits(GPIOE, numbersSet[d1]);
+						GPIO_ResetBits(GPIOE, numbersReset[d1]);
+					}
+					segment++;
+					if(segment == 4) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
+				else if(mig==0){ //zgaszony (0,2,3)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[a1]);
+						GPIO_ResetBits(GPIOE, numbersReset[a1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[c1]);
+						GPIO_ResetBits(GPIOE, numbersReset[c1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+						GPIO_SetBits(GPIOE, numbersSet[d1]);
+						GPIO_ResetBits(GPIOE, numbersReset[d1]);
+					}
+					segment++;
+					if(segment == 3) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
 			}
-			segment++;
-			if(segment == 4) segment = 0;
-			TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+			else if(counter_seg==2){ //JEŚLI MA MIGAĆ TRZECI(2) SEGMENT
+				if(mig==1){ //zapalony (0,1,2,3)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[a1]);
+						GPIO_ResetBits(GPIOE, numbersReset[a1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[b1]);
+						GPIO_ResetBits(GPIOE, numbersReset[b1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[c1]);
+						GPIO_ResetBits(GPIOE, numbersReset[c1]);
+					}
+					if(segment == 3)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+						GPIO_SetBits(GPIOE, numbersSet[d1]);
+						GPIO_ResetBits(GPIOE, numbersReset[d1]);
+					}
+					segment++;
+					if(segment == 4) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
+				else if(mig==0){ //zgaszony (0,1,3)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[a1]);
+						GPIO_ResetBits(GPIOE, numbersReset[a1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[b1]);
+						GPIO_ResetBits(GPIOE, numbersReset[b1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+						GPIO_SetBits(GPIOE, numbersSet[d1]);
+						GPIO_ResetBits(GPIOE, numbersReset[d1]);
+					}
+					segment++;
+					if(segment == 3) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
+			}
+			else if(counter_seg==3){ //JEŚLI MA MIGAĆ CZWARTY(3) SEGMENT
+				if(mig==1){ //zapalony (0,1,2,3)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[a1]);
+						GPIO_ResetBits(GPIOE, numbersReset[a1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[b1]);
+						GPIO_ResetBits(GPIOE, numbersReset[b1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[c1]);
+						GPIO_ResetBits(GPIOE, numbersReset[c1]);
+					}
+					if(segment == 3)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+						GPIO_SetBits(GPIOE, numbersSet[d1]);
+						GPIO_ResetBits(GPIOE, numbersReset[d1]);
+					}
+					segment++;
+					if(segment == 4) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
+				else if(mig==0){ //zgaszony (0,1,2)
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[a1]);
+						GPIO_ResetBits(GPIOE, numbersReset[a1]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[b1]);
+						GPIO_ResetBits(GPIOE, numbersReset[b1]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[c1]);
+						GPIO_ResetBits(GPIOE, numbersReset[c1]);
+					}
+					segment++;
+					if(segment == 3) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				}
+			}
 		}
 	}
 
+	//JEŚLI NIE MA TRYBU BUDZIKA
 	else if(mode == 0){
-		if(set == 0){
-			if(TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
-			{
-				if(segment == 0 && counter_seg == 0)
-				{
-					GPIO_SetBits(GPIOD, piny[0]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[a1]);
-					GPIO_ResetBits(GPIOE, numbersReset[a1]);
-					GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-				}
-				if(segment == 0 && counter_seg != 0)
-				{
-					GPIO_SetBits(GPIOD, piny[0]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+		if(set == 0){ // JEŚLI USTAWIAMY GODZINĘ
+			if(TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET){
+				if(counter_seg==0){ //JEŚLI MA MIGAC PIERWSZY(0) SEGMENT
+					if(mig==1){ //zapalony (0,1,2,3)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[0]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[a1]);
-					GPIO_ResetBits(GPIOE, numbersReset[a1]);
-				}
-				if(segment == 1 && counter_seg == 1)
-				{
-					GPIO_SetBits(GPIOD, piny[1]);
-					GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+							GPIO_SetBits(GPIOE, numbersSet[a]);
+							GPIO_ResetBits(GPIOE, numbersReset[a]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[1]);
+							GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[b1]);
-					GPIO_ResetBits(GPIOE, numbersReset[b1]);
-					GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-				}
-				if(segment == 1 && counter_seg != 1)
-				{
-					GPIO_SetBits(GPIOD, piny[1]);
-					GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+							GPIO_SetBits(GPIOE, numbersSet[b]);
+							GPIO_ResetBits(GPIOE, numbersReset[b]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[2]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[b1]);
-					GPIO_ResetBits(GPIOE, numbersReset[b1]);
-				}
-				if(segment == 2 && counter_seg == 2)
-				{
-					GPIO_SetBits(GPIOD, piny[2]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+							GPIO_SetBits(GPIOE, numbersSet[c]);
+							GPIO_ResetBits(GPIOE, numbersReset[c]);
+						}
+						if(segment == 3)
+						{
+							GPIO_SetBits(GPIOD, piny[3]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
 
-					GPIO_SetBits(GPIOE, numbersSet[c1]);
-					GPIO_ResetBits(GPIOE, numbersReset[c1]);
-					GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-				}
-				if(segment == 2 && counter_seg != 2)
-				{
-					GPIO_SetBits(GPIOD, piny[2]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+							GPIO_SetBits(GPIOE, numbersSet[d]);
+							GPIO_ResetBits(GPIOE, numbersReset[d]);
+						}
+						segment++;
+						if(segment == 4) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
+					else if(mig==0){ //zgaszony (1,2,3)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[1]);
+							GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[c1]);
-					GPIO_ResetBits(GPIOE, numbersReset[c1]);
-				}
-				if(segment == 3 && counter_seg == 3)
-				{
-					GPIO_SetBits(GPIOD, piny[3]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+							GPIO_SetBits(GPIOE, numbersSet[b]);
+							GPIO_ResetBits(GPIOE, numbersReset[b]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[2]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[d1]);
-					GPIO_ResetBits(GPIOE, numbersReset[d1]);
-					GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-				}
-				if(segment == 3 && counter_seg != 3)
-				{
-					GPIO_SetBits(GPIOD, piny[3]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+							GPIO_SetBits(GPIOE, numbersSet[c]);
+							GPIO_ResetBits(GPIOE, numbersReset[c]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[3]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
 
-					GPIO_SetBits(GPIOE, numbersSet[d1]);
-					GPIO_ResetBits(GPIOE, numbersReset[d1]);
+							GPIO_SetBits(GPIOE, numbersSet[d]);
+							GPIO_ResetBits(GPIOE, numbersReset[d]);
+						}
+						segment++;
+						if(segment == 3) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
 				}
-				segment++;
-				if(segment == 4) segment = 0;
-				TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+				else if(counter_seg==1){ //JEŚLI MA MIGAC DRUGI(1) SEGMENT
+					if(mig==1){ //zapalony (0,1,2,3)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[0]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[a]);
+							GPIO_ResetBits(GPIOE, numbersReset[a]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[1]);
+							GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[b]);
+							GPIO_ResetBits(GPIOE, numbersReset[b]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[2]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[c]);
+							GPIO_ResetBits(GPIOE, numbersReset[c]);
+						}
+						if(segment == 3)
+						{
+							GPIO_SetBits(GPIOD, piny[3]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+							GPIO_SetBits(GPIOE, numbersSet[d]);
+							GPIO_ResetBits(GPIOE, numbersReset[d]);
+						}
+						segment++;
+						if(segment == 4) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
+					else if(mig==0){ //zgaszony (0,2,3)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[0]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[a]);
+							GPIO_ResetBits(GPIOE, numbersReset[a]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[2]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[c]);
+							GPIO_ResetBits(GPIOE, numbersReset[c]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[3]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+							GPIO_SetBits(GPIOE, numbersSet[d]);
+							GPIO_ResetBits(GPIOE, numbersReset[d]);
+						}
+						segment++;
+						if(segment == 3) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
+				}
+				else if(counter_seg==2){ //JESLI MA MIGAC TRZECI(2) SEGMENT
+					if(mig==1){ //zapalony (0,1,2,3)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[0]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[a]);
+							GPIO_ResetBits(GPIOE, numbersReset[a]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[1]);
+							GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[b]);
+							GPIO_ResetBits(GPIOE, numbersReset[b]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[2]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[c]);
+							GPIO_ResetBits(GPIOE, numbersReset[c]);
+						}
+						if(segment == 3)
+						{
+							GPIO_SetBits(GPIOD, piny[3]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+							GPIO_SetBits(GPIOE, numbersSet[d]);
+							GPIO_ResetBits(GPIOE, numbersReset[d]);
+						}
+						segment++;
+						if(segment == 4) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
+					else if(mig==0){ //zgaszony (0,1,3)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[0]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[a]);
+							GPIO_ResetBits(GPIOE, numbersReset[a]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[1]);
+							GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[b]);
+							GPIO_ResetBits(GPIOE, numbersReset[b]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[3]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+							GPIO_SetBits(GPIOE, numbersSet[d]);
+							GPIO_ResetBits(GPIOE, numbersReset[d]);
+						}
+						segment++;
+						if(segment == 3) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
+				}
+				else if(counter_seg==3){ //JESLI MA MIGAC CZWARTY(3) SEGMENT
+					if(mig==1){ //zapalony (0,1,2,3)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[0]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[a]);
+							GPIO_ResetBits(GPIOE, numbersReset[a]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[1]);
+							GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[b]);
+							GPIO_ResetBits(GPIOE, numbersReset[b]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[2]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[c]);
+							GPIO_ResetBits(GPIOE, numbersReset[c]);
+						}
+						if(segment == 3)
+						{
+							GPIO_SetBits(GPIOD, piny[3]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+							GPIO_SetBits(GPIOE, numbersSet[d]);
+							GPIO_ResetBits(GPIOE, numbersReset[d]);
+						}
+						segment++;
+						if(segment == 4) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
+					else if(mig==0){ //zgaszony (0,1,2)
+						if(segment == 0)
+						{
+							GPIO_SetBits(GPIOD, piny[0]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[a]);
+							GPIO_ResetBits(GPIOE, numbersReset[a]);
+						}
+						if(segment == 1)
+						{
+							GPIO_SetBits(GPIOD, piny[1]);
+							GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[b]);
+							GPIO_ResetBits(GPIOE, numbersReset[b]);
+						}
+						if(segment == 2)
+						{
+							GPIO_SetBits(GPIOD, piny[2]);
+							GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+							GPIO_SetBits(GPIOE, numbersSet[c]);
+							GPIO_ResetBits(GPIOE, numbersReset[c]);
+						}
+						segment++;
+						if(segment == 3) segment = 0;
+						TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+					}
+				}
 			}
 		}
-		if(set != 0){
-			if(TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
-			{
-				if(segment == 0)
-				{
-					GPIO_SetBits(GPIOD, piny[0]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[a]);
-					GPIO_ResetBits(GPIOE, numbersReset[a]);
+		if(set == 1){ //JEŚLI CZAS SOBIE LECI TYLKO (set = 1)
+			if(TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET){
+				if(mig==1){ //tutaj sobie mruga kropeczka
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
 
+						GPIO_SetBits(GPIOE, numbersSet[a]);
+						GPIO_ResetBits(GPIOE, numbersReset[a]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[b]);
+						GPIO_ResetBits(GPIOE, numbersReset[b]);
+						GPIO_ResetBits(GPIOE, GPIO_Pin_11);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+
+						GPIO_SetBits(GPIOE, numbersSet[c]);
+						GPIO_ResetBits(GPIOE, numbersReset[c]);
+					}
+					if(segment == 3)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+						GPIO_SetBits(GPIOE, numbersSet[d]);
+						GPIO_ResetBits(GPIOE, numbersReset[d]);
+					}
+					segment++;
+					if(segment == 4) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 				}
-				if(segment == 1)
-				{
-					GPIO_SetBits(GPIOD, piny[1]);
-					GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
+				else if(mig==0){ //a tutaj nie mruga
+					if(segment == 0)
+					{
+						GPIO_SetBits(GPIOD, piny[0]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[b]);
-					GPIO_ResetBits(GPIOE, numbersReset[b]);
-				}
-				if(segment == 2)
-				{
-					GPIO_SetBits(GPIOD, piny[2]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
+						GPIO_SetBits(GPIOE, numbersSet[a]);
+						GPIO_ResetBits(GPIOE, numbersReset[a]);
+					}
+					if(segment == 1)
+					{
+						GPIO_SetBits(GPIOD, piny[1]);
+						GPIO_ResetBits(GPIOD, piny[0] | piny[2] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[c]);
-					GPIO_ResetBits(GPIOE, numbersReset[c]);
-				}
-				if(segment == 3)
-				{
-					GPIO_SetBits(GPIOD, piny[3]);
-					GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+						GPIO_SetBits(GPIOE, numbersSet[b] /*| GPIO_Pin_11*/ );
+						GPIO_ResetBits(GPIOE, numbersReset[b]);
+					}
+					if(segment == 2)
+					{
+						GPIO_SetBits(GPIOD, piny[2]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[0] | piny[3]);
 
-					GPIO_SetBits(GPIOE, numbersSet[d]);
-					GPIO_ResetBits(GPIOE, numbersReset[d]);
+						GPIO_SetBits(GPIOE, numbersSet[c]);
+						GPIO_ResetBits(GPIOE, numbersReset[c]);
+					}
+					if(segment == 3)
+					{
+						GPIO_SetBits(GPIOD, piny[3]);
+						GPIO_ResetBits(GPIOD, piny[1] | piny[2] | piny[0]);
+
+						GPIO_SetBits(GPIOE, numbersSet[d]);
+						GPIO_ResetBits(GPIOE, numbersReset[d]);
+					}
+					segment++;
+					if(segment == 4) segment = 0;
+					TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 				}
-				segment++;
-				if(segment == 4) segment = 0;
-				TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 			}
 		}
 	}
 }
 
-//changing time
+void TIM3_IRQHandler(void)
+{
+	if(TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
+	{
+		//odpowiedzialne za miganie
+		if(mig == 0) {mig=1;}
+		else if(mig==1) {mig=0;}
+
+		////////////////////////////////////
+		GPIO_ToggleBits(GPIOD, GPIO_Pin_12);
+		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+	}
+}
+
 void TIM5_IRQHandler(void)
 {
 	if(TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
 	{
-		d++;
-		if(d==10) {d=0; c++;}
-		if(c==6) {c=0; b++;}
-		if(a<2 && b==10) {b=0; a++;}
-		if(a==2 && b==3) {b=0; a++;}
-		if(a==3) {a=0;}
-
+		// zmiana cyfr na wyswietlaczu odpowiednio dla zegara :)))))
+		licznikdlagodziny++;
+		if(licznikdlagodziny==60){
+			d++;
+			if(d==10) {d=0; c++;}
+			if(c==6) {c=0; b++;}
+			if(a<2 && b==10) {b=0; a++;}
+			if(a==2 && b==3) {b=0; a++;}
+			if(a==3) {a=0;}
+			licznikdlagodziny=0;
+		}
 		TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	}
 }
 
-//stopping the alarm
 void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
 		on_off = 1;
-		TIM_Cmd(TIM4, DISABLE);
-		a1=0; b1=0; c1=0; d1=0;
-		counter_seg=0;
+		TIM_Cmd(TIM4, DISABLE); //wyłączenie dzwonka
+		a1=0; b1=0; c1=0; d1=0; //reset budzika
+		counter_seg=0; //i segmentu
 
 		EXTI_ClearITPendingBit(EXTI_Line0);
 	}
@@ -322,14 +776,15 @@ void EXTI0_IRQHandler(void)
 int main(void)
 {
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//clock
+	////////////////////////////////////////////////                  ZEGAR                  //////////////////////////////////////////////
 
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
+	//WYŚWIETLACZ
 	GPIO_InitTypeDef  GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5| GPIO_Pin_6| GPIO_Pin_7 | GPIO_Pin_8 |  GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -346,6 +801,7 @@ int main(void)
 	GPIO_InitStructure2.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(GPIOD, &GPIO_InitStructure2);
 
+	//TIMER 2
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure2;
 	TIM_TimeBaseStructure2.TIM_Period = 9999;
 	TIM_TimeBaseStructure2.TIM_Prescaler = 20;
@@ -353,19 +809,35 @@ int main(void)
 	TIM_TimeBaseStructure2.TIM_CounterMode =  TIM_CounterMode_Up;
 	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure2);
 
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure5;
-	TIM_TimeBaseStructure5.TIM_Period = 9999;
-	TIM_TimeBaseStructure5.TIM_Prescaler = 8399;
-	TIM_TimeBaseStructure5.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseStructure5.TIM_CounterMode =  TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure5);
-
 	NVIC_InitTypeDef NVIC_InitStructure2;
 	NVIC_InitStructure2.NVIC_IRQChannel = TIM2_IRQn;
 	NVIC_InitStructure2.NVIC_IRQChannelPreemptionPriority = 0x01;
 	NVIC_InitStructure2.NVIC_IRQChannelSubPriority = 0x00;
 	NVIC_InitStructure2.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure2);
+
+	//TIMER 3
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;
+	TIM_TimeBaseStructure3.TIM_Period = 4999;
+	TIM_TimeBaseStructure3.TIM_Prescaler = 8399;
+	TIM_TimeBaseStructure3.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseStructure3.TIM_CounterMode =  TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure3);
+
+	NVIC_InitTypeDef NVIC_InitStructure3;
+	NVIC_InitStructure3.NVIC_IRQChannel = TIM3_IRQn;
+	NVIC_InitStructure3.NVIC_IRQChannelPreemptionPriority = 0x00;
+	NVIC_InitStructure3.NVIC_IRQChannelSubPriority = 0x00;
+	NVIC_InitStructure3.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure3);
+
+	//TIMER 5
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure5;
+	TIM_TimeBaseStructure5.TIM_Period = 9999;
+	TIM_TimeBaseStructure5.TIM_Prescaler = 8399;
+	TIM_TimeBaseStructure5.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseStructure5.TIM_CounterMode =  TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure5);
 
 	NVIC_InitTypeDef NVIC_InitStructure5;
 	NVIC_InitStructure5.NVIC_IRQChannel = TIM5_IRQn;
@@ -375,18 +847,22 @@ int main(void)
 	NVIC_Init(&NVIC_InitStructure5);
 
 	TIM_Cmd(TIM2, ENABLE);
+	TIM_Cmd(TIM3, ENABLE);
 	TIM_Cmd(TIM5, DISABLE);
 
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
+
+	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
 	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	TIM_ITConfig(TIM5, TIM_IT_Update, ENABLE);
 
 	GPIO_SetBits(GPIOE, GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11);
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//set alarm
+
+	//////////////////////////////////////////////////         USTAWIANIE ALARMU        ///////////////////////////////////////////////////
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 
@@ -398,9 +874,8 @@ int main(void)
 	GPIO_InitStructure3.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_Init(GPIOB, &GPIO_InitStructure3);
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	//playing alarm
 
+	//////////////////////////////////////////////            DZWONIENIE             /////////////////////////////////////////////////////
 	SystemInit();
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
@@ -409,28 +884,28 @@ int main(void)
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
-	GPIO_InitTypeDef GPIO_InitStructure4;
-	GPIO_InitStructure4.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_1;
-	GPIO_InitStructure4.GPIO_Mode = GPIO_Mode_AN;
-	GPIO_InitStructure4.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure4.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOA, &GPIO_InitStructure4);
+	GPIO_InitTypeDef GPIO_InitStructureAlarm;
+	GPIO_InitStructureAlarm.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_1;
+	GPIO_InitStructureAlarm.GPIO_Mode = GPIO_Mode_AN;
+	GPIO_InitStructureAlarm.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructureAlarm.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOA, &GPIO_InitStructureAlarm);
 
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure4;
-	TIM_TimeBaseStructure4.TIM_Period = 62;
-	TIM_TimeBaseStructure4.TIM_Prescaler = 83;
-	TIM_TimeBaseStructure4.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseStructure4.TIM_CounterMode =  TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure4);
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructureAlarm;
+	TIM_TimeBaseStructureAlarm.TIM_Period = 62;
+	TIM_TimeBaseStructureAlarm.TIM_Prescaler = 83;
+	TIM_TimeBaseStructureAlarm.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseStructureAlarm.TIM_CounterMode =  TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructureAlarm);
 
 	TIM_Cmd(TIM4, DISABLE);
 
-	NVIC_InitTypeDef NVIC_InitStructure4;
-	NVIC_InitStructure4.NVIC_IRQChannel = TIM4_IRQn;
-	NVIC_InitStructure4.NVIC_IRQChannelPreemptionPriority = 0x00;
-	NVIC_InitStructure4.NVIC_IRQChannelSubPriority = 0x00;
-	NVIC_InitStructure4.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure4);
+	NVIC_InitTypeDef NVIC_InitStructureAlarm;
+	NVIC_InitStructureAlarm.NVIC_IRQChannel = TIM4_IRQn;
+	NVIC_InitStructureAlarm.NVIC_IRQChannelPreemptionPriority = 0x00;
+	NVIC_InitStructureAlarm.NVIC_IRQChannelSubPriority = 0x00;
+	NVIC_InitStructureAlarm.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructureAlarm);
 
 	TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
 	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
@@ -465,12 +940,10 @@ int main(void)
 	DAC_Init(DAC_Channel_1, &DAC_InitStructure);
 
 	DAC_Cmd(DAC_Channel_1, ENABLE);
-
 	iter = 0;
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//turn off the alarm
 
+	///////////////////////////////////////////////          WYŁĄCZENIE ALARMU           //////////////////////////////////////////////
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
 	NVIC_InitTypeDef NVIC_InitStructure;
